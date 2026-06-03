@@ -8,6 +8,7 @@ class Ingredient:
     def quantity(self):
         return self._quantity
 
+    @quantity.setter
     def quantity(self, value):
         value_float = float(value)
         if value_float <= 0:
@@ -20,7 +21,7 @@ class Ingredient:
     def __repr__(self):
         return f"Ingredient('{self.name}', {self.quantity}, '{self.unit}')"
 
-    def __eg__(self, other):
+    def __eq__(self, other):
         if isinstance(other, Ingredient):
             return self.name == other.name and self.unit == other.unit
         return False
@@ -53,4 +54,38 @@ class Recipe:
 
     def __str__(self):
         ingredients_str = "\n".join([f" - {ing}" for ing in self.ingredients])
-        return f"Рецепт: {self.title}\nИнгридиенты:\n{ingredients_str}"
+        return f"Рецепт: {self.title}\nИнгрeдиенты:\n{ingredients_str}"
+
+class ShoppingList:
+    def __init__(self):
+        self._items = []
+
+    def add_recipe(self, recipe, portions):
+        if portions <= 0:
+            raise ValueError("Количество порций должно быть положительным")
+        scaled_recipe = recipe.scale(portions)
+
+        for ingredient in scaled_recipe.ingredients:
+            self._items.append((ingredient, recipe.title))
+
+    def remove_recipe(self, title):
+        self._items = [item for item in self._items if item[1] != title]
+
+    def get_list(self):
+        ingredients_dict = {}
+        for ingredient, recipe_title in self._items:
+            key = (ingredient.name, ingredient.unit)
+
+            if key in ingredients_dict:
+                ingredients_dict[key] += ingredient.quantity
+            else:
+                ingredients_dict[key] = ingredient.quantity
+        result_list = [Ingredient(name, quantity, unit) for (name, unit), quantity in ingredients_dict.items()]
+        result_list.sort(key=lambda x: x.name)
+        return result_list
+
+    def __add__(self, other):
+        new_list = ShoppingList()
+        new_list._items = self._items + other._items
+        return new_list
+
